@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>پنل مدیریت کافه | منو، میزها و سفارش‌ها</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #14110f;
+      --card: #1e1a17;
+      --card-2: #28231f;
+      --text: #f5efe8;
+      --muted: #a69c92;
+      --accent: #c47d43;
+      --border: #342d27;
+      --ok: #38a169;
+      --warn: #d69e2e;
+      --bad: #e53e3e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 18px 14px 60px;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; }
+    .login-box {
+      max-width: 380px; margin: 80px auto; background: var(--card);
+      border: 1px solid var(--border); border-radius: 20px; padding: 24px; text-align: center;
+    }
+    .login-box h2 { margin-bottom: 8px; }
+    .login-box p { color: var(--muted); font-size: 0.88rem; margin-bottom: 14px; }
+    .top-bar {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: 10px; background: var(--card); border: 1px solid var(--border);
+      padding: 16px 18px; border-radius: 18px; margin-bottom: 16px;
+    }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tab-btn {
+      padding: 9px 16px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); font-family: inherit; font-weight: 600; cursor: pointer;
+    }
+    .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 18px; margin-bottom: 18px;
+    }
+    .panel h3 { font-size: 1.05rem; margin-bottom: 12px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.82rem; color: var(--muted); }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; border-radius: 11px;
+      border: 1px solid var(--border); background: var(--card-2); color: var(--text);
+      font-family: inherit; font-size: 0.9rem; outline: none;
+    }
+    button {
+      border: none; border-radius: 11px; padding: 9px 14px;
+      font-family: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost { background: var(--card-2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ok { background: rgba(56, 161, 105, 0.2); color: #68d391; }
+    .btn-warn { background: rgba(214, 158, 46, 0.2); color: #f6e05e; }
+    .btn-bad { background: rgba(229, 62, 62, 0.2); color: #fc8181; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 680px; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--border); text-align: right; font-size: 0.86rem; }
+    th { color: var(--muted); }
+    .pill { padding: 3px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+    .pill.on { background: rgba(56, 161, 105, 0.2); color: #68d391; }
+    .pill.off { background: rgba(229, 62, 62, 0.2); color: #fc8181; }
+    .order-card {
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px; margin-bottom: 12px;
+    }
+    .order-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div id="loginScreen" class="login-box">
+    <h2>ورود مدیر کافه</h2>
+    <p>رمز عبور پنل مدیریت را وارد کنید</p>
+    <input type="password" id="passInput" placeholder="رمز عبور" style="margin-bottom: 12px;" />
+    <button class="btn-primary" style="width: 100%;" onclick="login()">ورود</button>
+  </div>
+
+  <div id="adminApp" class="wrap" style="display: none;">
+    <div class="top-bar">
+      <div>
+        <h2>پنل مدیریت کافه</h2>
+        <span style="font-size: 0.82rem; color: var(--muted);">مدیریت منو، آپلود عکس از گوشی، میزها و سفارش‌ها</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-ghost" onclick="refreshAll()">بروزرسانی همه</button>
+        <button class="btn-ghost" onclick="logout()">خروج</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tabOrders" onclick="switchTab('orders')">سفارش‌های زنده</button>
+      <button class="tab-btn" id="tabMenu" onclick="switchTab('menu')">مدیریت منو و آپلود عکس</button>
+      <button class="tab-btn" id="tabTables" onclick="switchTab('tables')">تنظیم تعداد میزها</button>
+    </div>
+
+    <!-- بخش سفارش‌ها -->
+    <section id="secOrders" class="panel">
+      <h3>سفارش‌های ثبت‌شده (میز و بیرون‌بر)</h3>
+      <div id="ordersList">در حال دریافت سفارش‌ها...</div>
+    </section>
+
+    <!-- بخش منو و آپلود عکس -->
+    <section id="secMenu" style="display: none;">
+      <div class="panel">
+        <h3 id="formTitle">افزودن آیتم جدید به منو</h3>
+        <form id="menuForm">
+          <input type="hidden" id="editId" />
+          <div class="form-grid">
+            <div class="field">
+              <label>نام آیتم *</label>
+              <input type="text" id="fName" required placeholder="مثلاً موکا سرد" />
+            </div>
+            <div class="field">
+              <label>دسته‌بندی *</label>
+              <input type="text" id="fCategory" required placeholder="نوشیدنی سرد" />
+            </div>
+            <div class="field">
+              <label>قیمت (تومان) *</label>
+              <input type="number" id="fPrice" required min="0" placeholder="140000" />
+            </div>
+            <div class="field">
+              <label>برچسب ویژه</label>
+              <input type="text" id="fBadge" placeholder="پرفروش / جدید" />
+            </div>
+            <div class="field">
+              <label>آپلود عکس از گوشی / گالری</label>
+              <input type="file" id="photoFile" accept="image/*" />
+            </div>
+            <div class="field">
+              <label>مسیر یا لینک عکس</label>
+              <input type="text" id="fImage" placeholder="/uploads/... یا لینک مستقیم" />
+            </div>
+            <div class="field">
+              <label>وضعیت موجودی</label>
+              <select id="fAvailable">
+                <option value="true">موجود</option>
+                <option value="false">ناموجود</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" style="margin-top: 10px;">
+            <label>توضیحات</label>
+            <textarea id="fDesc" rows="2" placeholder="توضیح کوتاه درباره آیتم..."></textarea>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <button type="submit" class="btn-primary" id="saveItemBtn">ذخیره آیتم</button>
+            <button type="button" class="btn-ghost" id="cancelEditBtn" style="display: none;" onclick="resetForm()">انصراف</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h3>لیست آیتم‌های منو</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>نام</th>
+                <th>دسته</th>
+                <th>قیمت</th>
+                <th>موجودی</th>
+                <th>عملیات</th>
+              </tr>
+            </thead>
+            <tbody id="menuBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- بخش تنظیم تعداد میزها -->
+    <section id="secTables" class="panel" style="display: none;">
+      <h3>تنظیم تعداد میزهای سالن</h3>
+      <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 12px;">
+        هر عددی وارد کنید، لیست میزهای داخل منوی مشتری بلافاصله به‌روز می‌شود.
+      </p>
+      <div style="display: flex; gap: 10px; max-width: 340px; align-items: center;">
+        <input type="number" id="tableCountInput" min="0" max="200" value="10" />
+        <button class="btn-primary" onclick="saveTableCount()">ذخیره</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE_URL = "http://94.184.45.64:8010";
+    const ADMIN_PASS = "1234";
+
+    let menuItems = [];
+
+    function login() {
+      if (document.getElementById("passInput").value === ADMIN_PASS) {
+        sessionStorage.setItem("cafe_admin_ok", "1");
+        showAdmin();
+      } else {
+        alert("رمز اشتباه است.");
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem("cafe_admin_ok");
+      location.reload();
+    }
+
+    function showAdmin() {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("adminApp").style.display = "block";
+      refreshAll();
+    }
+
+    if (sessionStorage.getItem("cafe_admin_ok") === "1") showAdmin();
+
+    function switchTab(tab) {
+      ["orders", "menu", "tables"].forEach(t => {
+        document.getElementById("tab" + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle("active", t === tab);
+        document.getElementById("sec" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? "block" : "none";
+      });
+    }
+
+    async function refreshAll() {
+      await Promise.all([loadOrders(), loadMenu(), loadTables()]);
+    }
+
+    async function loadTables() {
+      const res = await fetch(`${API_BASE_URL}/settings/tables`, { cache: "no-store" });
+      const data = await res.json();
+      document.getElementById("tableCountInput").value = data.table_count ?? 10;
+    }
+
+    async function saveTableCount() {
+      const count = Number(document.getElementById("tableCountInput").value) || 0;
+      const res = await fetch(`${API_BASE_URL}/settings/tables`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ table_count: count }),
+      });
+      const data = await res.json();
+      if (data.ok) alert(`تعداد میزها روی ${data.table_count} میز ذخیره شد.`);
+    }
+
+    async function loadOrders() {
+      const res = await fetch(`${API_BASE_URL}/orders`, { cache: "no-store" });
+      const data = await res.json();
+      const orders = data.orders || [];
+      const box = document.getElementById("ordersList");
+      if (!orders.length) {
+        box.innerHTML = `<p style="color: var(--muted);">هنوز سفارشی ثبت نشده است.</p>`;
+        return;
+      }
+
+      box.innerHTML = orders.map(o => {
+        const isTakeaway = o.order_type === "takeaway";
+        const targetLabel = isTakeaway
+          ? `بیرون‌بر | کد تحویل: <strong>${o.order_code}</strong> | تماس: <strong>${o.phone}</strong>`
+          : `داخل سالن | <strong>${o.table_number}</strong> | کد: <strong>${o.order_code}</strong>`;
+        const itemsTxt = (o.items || []).map(i => `${i.name} × ${i.qty}`).join("، ");
+        return `
+          <div class="order-card">
+            <div class="order-head">
+              <div>${targetLabel}</div>
+              <div><strong>${Number(o.total_price || 0).toLocaleString("fa-IR")} تومان</strong></div>
+            </div>
+            <div style="font-size: 0.88rem; color: var(--muted); margin-bottom: 10px;">آیتم‌ها: ${itemsTxt}</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <span style="font-size: 0.82rem;">وضعیت فعلی: <strong>${o.status}</strong></span>
+              <select onchange="changeOrderStatus('${o.id}', this.value)" style="max-width: 220px;">
+                <option value="در انتظار تایید" ${o.status === "در انتظار تایید" ? "selected" : ""}>در انتظار تایید</option>
+                <option value="در حال آماده‌سازی" ${o.status === "در حال آماده‌سازی" ? "selected" : ""}>در حال آماده‌سازی</option>
+                <option value="${isTakeaway ? "آماده تحویل بیرون‌بر" : "ارسال شد به میز"}" ${o.status.includes("آماده") || o.status.includes("ارسال") ? "selected" : ""}>
+                  ${isTakeaway ? "آماده تحویل بیرون‌بر" : "ارسال شد به میز"}
+                </option>
+                <option value="تحویل‌شده" ${o.status === "تحویل‌شده" ? "selected" : ""}>تحویل‌شده</option>
+              </select>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function changeOrderStatus(orderId, status) {
+      await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      await loadOrders();
+    }
+
+    document.getElementById("photoFile").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${API_BASE_URL}/upload`, { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.ok && data.path) {
+        document.getElementById("fImage").value = data.path;
+        alert("عکس روی سرور آپلود شد.");
+      } else {
+        alert("خطا در آپلود عکس");
+      }
+    });
+
+    async function loadMenu() {
+      const res = await fetch(`${API_BASE_URL}/menu`, { cache: "no-store" });
+      const data = await res.json();
+      menuItems = data.items || [];
+      const tbody = document.getElementById("menuBody");
+      tbody.innerHTML = menuItems.map(m => `
+        <tr>
+          <td><strong>${m.name}</strong></td>
+          <td>${m.category}</td>
+          <td>${Number(m.price).toLocaleString("fa-IR")} تومان</td>
+          <td><span class="pill ${m.available ? "on" : "off"}">${m.available ? "موجود" : "ناموجود"}</span></td>
+          <td style="display: flex; gap: 6px;">
+            <button class="btn-warn" onclick="editItem('${m.id}')">ویرایش</button>
+            <button class="btn-bad" onclick="delItem('${m.id}')">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function editItem(id) {
+      const m = menuItems.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById("editId").value = m.id;
+      document.getElementById("fName").value = m.name;
+      document.getElementById("fCategory").value = m.category;
+      document.getElementById("fPrice").value = m.price;
+      document.getElementById("fBadge").value = m.badge || "";
+      document.getElementById("fImage").value = m.image || "";
+      document.getElementById("fAvailable").value = String(Boolean(m.available));
+      document.getElementById("fDesc").value = m.description || "";
+      document.getElementById("formTitle").textContent = `ویرایش: ${m.name}`;
+      document.getElementById("cancelEditBtn").style.display = "inline-block";
+    }
+
+    function resetForm() {
+      document.getElementById("menuForm").reset();
+      document.getElementById("editId").value = "";
+      document.getElementById("formTitle").textContent = "افزودن آیتم جدید به منو";
+      document.getElementById("cancelEditBtn").style.display = "none";
+    }
+
+    document.getElementById("menuForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById("editId").value;
+      const body = {
+        name: document.getElementById("fName").value.trim(),
+        category: document.getElementById("fCategory").value.trim(),
+        price: Number(document.getElementById("fPrice").value) || 0,
+        badge: document.getElementById("fBadge").value.trim(),
+        image: document.getElementById("fImage").value.trim(),
+        available: document.getElementById("fAvailable").value === "true",
+        description: document.getElementById("fDesc").value.trim(),
+      };
+
+      const url = editId ? `${API_BASE_URL}/menu/${editId}` : `${API_BASE_URL}/menu`;
+      const method = editId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        resetForm();
+        await loadMenu();
+        alert("ذخیره شد.");
+      }
+    });
+
+    async function delItem(id) {
+      if (!confirm("این آیتم حذف شود؟")) return;
+      await fetch(`${API_BASE_URL}/menu/${id}`, { method: "DELETE" });
+      await loadMenu();
+    }
+  </script>
+</body>
+</html>
